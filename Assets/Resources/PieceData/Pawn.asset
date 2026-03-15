@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ecedd130885d13c48afa571fa23aa0df, type: 3}
+  m_Name: Pawn
+  m_EditorClassIdentifier: Assembly-CSharp::PieceData
+  type: 0
+  whiteSprite: {fileID: -417347133267021387, guid: 366323baee5b79746a8bd7eb71b19060, type: 3}
+  blackSprite: {fileID: -8483004102220922153, guid: 45d8a0ffc85f88a4f8c24f547747b3ce, type: 3}
+  movePatterns:
+  - {x: 1, y: 1}
+  - {x: -1, y: 1}
+  - {x: 0, y: 1}
+  - {x: 0, y: 2}
+  isSliding: 0
+  maxSlidable: 0

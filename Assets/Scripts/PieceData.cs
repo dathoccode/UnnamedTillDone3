@@ -10,9 +10,19 @@ public enum PieceType
     King
 }
 
-public class PieceData
+public enum TeamColor
+{
+    White,
+    Black
+}
+
+[CreateAssetMenu(fileName = "PieceData", menuName = "ScriptableObjects/PieceData")]
+public class PieceData : ScriptableObject
 {
     public PieceType type;
-    public Sprite sprie;
-    public int teamColor;
+    public Sprite whiteSprite;
+    public Sprite blackSprite;
+    public Vector2Int[] movePatterns;
+    public bool isSliding;
+    public int maxSlidable;
 }

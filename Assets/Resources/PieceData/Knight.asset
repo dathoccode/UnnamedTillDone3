@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ecedd130885d13c48afa571fa23aa0df, type: 3}
+  m_Name: Knight
+  m_EditorClassIdentifier: Assembly-CSharp::PieceData
+  type: 2
+  whiteSprite: {fileID: -4830087039057309723, guid: ac506a0a96f69e349bf8229789e20ad5, type: 3}
+  blackSprite: {fileID: 6702331507871257524, guid: 78a776c187dd0f148844c4b2a63d0d52, type: 3}
+  movePatterns:
+  - {x: 1, y: -2}
+  - {x: 1, y: 2}
+  - {x: -1, y: -2}
+  - {x: 1, y: 2}
+  - {x: -2, y: 1}
+  - {x: -2, y: -1}
+  - {x: 2, y: 1}
+  - {x: 2, y: -1}
+  isSliding: 0
+  maxSlidable: 0
