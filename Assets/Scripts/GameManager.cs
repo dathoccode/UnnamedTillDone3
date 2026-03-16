@@ -3,33 +3,43 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GameManager : MonoBehaviour
+public class GameManager : MyMonoBehaviour
 {
-    public ChessPiece[,] pieces = new ChessPiece[8,8];
-    public ChessPiece piecePrefab;
-    void Start()
+    private static GameManager instance;
+    public static GameManager Instance => instance;
+
+    [SerializeField] private Board board;
+    public ChessPiece currentPiece;  
+
+    protected override void LoadComponent()
     {
-        InitPieces();
+        base.LoadComponent();
+        if (board == null) Debug.LogError("Board is not set in " + gameObject.name);
     }
 
-    void Update()
+    private void Awake()
     {
-        
+        if (instance == null) instance = this;
     }
 
-    void InitPieces()
+    protected override void Start()
     {
-        foreach(var piece in Data.WhiteStartPositions)
+        base.Start();
+        board.InitPieces();
+    }
+
+    public void SetCurrentPiece(ChessPiece newPiece)
+    {
+        currentPiece = newPiece;
+    }
+
+    public void OnPieceMove(Vector2Int newPos)
+    {
+        if (!board.Move(currentPiece.BoardIndex, newPos)) 
         {
-            foreach(var position in piece.Value)
-            {
-                ChessPiece newWhitePiece = Instantiate(piecePrefab, new Vector3(position.x, position.y, 0), Quaternion.identity);
-                newWhitePiece.InstantiatePiece(piece.Key, TeamColor.White);
-                pieces[position.x, position.y] = newWhitePiece;
-                ChessPiece newBlackPiece = Instantiate(piecePrefab, new Vector3(position.x, 7 -position.y, 0), Quaternion.identity);
-                newBlackPiece.InstantiatePiece(piece.Key, TeamColor.Black);
-                pieces[position.x, 7 - position.y] = newBlackPiece;
-            }
+            currentPiece.RecoverPosition();
         }
+        else currentPiece.MoveTo(newPos);
+
     }
 }

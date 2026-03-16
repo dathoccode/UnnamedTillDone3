@@ -4,19 +4,13 @@ using UnityEngine.InputSystem;
 public class DragAndDrop : MonoBehaviour
 {
     private bool isDragging = false;
-    private Camera cam;
-
-    void Start()
-    {
-        cam = Camera.main;
-    }
 
     void Update()
     {
         if (Mouse.current == null) return;
 
         Vector2 mouseScreen = Mouse.current.position.ReadValue();
-        Vector2 mouseWorld = cam.ScreenToWorldPoint(mouseScreen);
+        Vector2 mouseWorld = Camera.main.ScreenToWorldPoint(mouseScreen);
 
         // Click chuột
         if (Mouse.current.leftButton.wasPressedThisFrame)
@@ -26,14 +20,16 @@ public class DragAndDrop : MonoBehaviour
             if (hit.collider != null && hit.collider.gameObject == gameObject)
             {
                 isDragging = true;
+                GameManager.Instance.SetCurrentPiece(GetComponent<ChessPiece>());
             }
         }
 
         // Thả chuột
-        if (Mouse.current.leftButton.wasReleasedThisFrame)
+        if (Mouse.current.leftButton.wasReleasedThisFrame && isDragging)
         {
             isDragging = false;
-            FitInBoard();
+            GameManager.Instance.OnPieceMove(FitInBoard());
+            
         }
 
         // Kéo object
@@ -43,9 +39,9 @@ public class DragAndDrop : MonoBehaviour
         }
     }
 
-    void FitInBoard()
+    Vector2Int FitInBoard()
     {
-        transform.position = new Vector2(
+       return new Vector2Int(
             Mathf.RoundToInt(transform.position.x),
             Mathf.RoundToInt(transform.position.y));
     }
