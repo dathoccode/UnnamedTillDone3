@@ -31,6 +31,14 @@ public class GameManager : MyMonoBehaviour
     public void SetCurrentPiece(ChessPiece newPiece)
     {
         currentPiece = newPiece;
+        List<Vector2Int> array = currentPiece.GetAllValidMove(board.pieces);
+
+        //
+        Debug.Log("valid move: ");
+        foreach (var piece in array)
+        {
+            Debug.Log(piece);
+        }
     }
 
     public void OnPieceMove(Vector2Int newPos)

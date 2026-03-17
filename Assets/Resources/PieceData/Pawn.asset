@@ -16,9 +16,6 @@ MonoBehaviour:
   whiteSprite: {fileID: -417347133267021387, guid: 366323baee5b79746a8bd7eb71b19060, type: 3}
   blackSprite: {fileID: -8483004102220922153, guid: 45d8a0ffc85f88a4f8c24f547747b3ce, type: 3}
   movePatterns:
-  - {x: 1, y: 1}
-  - {x: -1, y: 1}
   - {x: 0, y: 1}
-  - {x: 0, y: 2}
   isSliding: 0
   maxSlidable: 0

@@ -1,4 +1,5 @@
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -43,16 +44,19 @@ public class Board : MyMonoBehaviour
 
     public bool Move(Vector2Int from, Vector2Int to)
     {
-        if (!ValidateMove(from, to))
+        ChessPiece piece = pieces[from.x, from.y];
+        if (piece.GetAllValidMove(pieces).Contains(to)) 
         {
-            Debug.Log("Move failed");
-            return false;
+            if (pieces[to.x, to.y] != null)
+            {
+                Destroy(pieces[to.x, to.y].gameObject);
+            }
+            pieces[to.x, to.y] = pieces[from.x, from.y];
+            pieces[from.x, from.y] = null;
+            return true;
         }
-        Destroy(pieces[to.x, to.y]);
-        pieces[to.x, to.y] = pieces[from.x, from.y];
-        pieces[from.x, from.y] = null;
-        Debug.Log("Move successfully");
-        return true;
+       
+        return false;
     }
 
     private void Take(Vector2Int pos)
@@ -63,13 +67,22 @@ public class Board : MyMonoBehaviour
 
     private bool ValidateMove(Vector2Int from, Vector2Int to)
     {
-        Vector2Int dir = NormalizeDir(to - from);
+        if (from == to) return false;   //Cant move to the same cell
+
+        Vector2Int dir = to - from;
+
         ChessPiece fromPiece = pieces[from.x, from.y];
         Vector2Int pos = from + dir;
-        // piece doesn't exist / destination doesn't fit move pattern
-        if (fromPiece == null || !fromPiece.PieceSO.movePatterns.Contains(dir)) 
-            return false;
 
+        // Normalize direction if the piece is slidable
+        if (fromPiece.PieceSO.isSliding) dir = NormalizeDir(dir);
+        
+        // piece doesn't exist / destination doesn't fit move pattern
+        if (fromPiece == null || !fromPiece.PieceSO.movePatterns.Contains(dir))
+        {
+            return false;
+        }
+            
         while (pos != to)
         {
             if (pos == to)
@@ -86,7 +99,7 @@ public class Board : MyMonoBehaviour
             pos += dir;
         }
 
-        return false;
+        return true;
     }
 
     private Vector2Int NormalizeDir(Vector2Int dir)
