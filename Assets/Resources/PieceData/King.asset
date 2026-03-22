@@ -9,20 +9,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ecedd130885d13c48afa571fa23aa0df, type: 3}
+  m_Script: {fileID: 11500000, guid: 739a70d5876d2554fad19525e49d2052, type: 3}
   m_Name: King
-  m_EditorClassIdentifier: Assembly-CSharp::PieceData
+  m_EditorClassIdentifier: Assembly-CSharp::PieceSO
   type: 5
   whiteSprite: {fileID: -5021420377320569161, guid: aa588e6859ef4b14fba86fb2c9ad1aeb, type: 3}
   blackSprite: {fileID: 2627935112374146259, guid: e605ed4d7fddbf64d957c54feb177907, type: 3}
   movePatterns:
-  - {x: -1, y: 1}
   - {x: 0, y: 1}
-  - {x: 1, y: 1}
-  - {x: -1, y: -1}
   - {x: 0, y: -1}
-  - {x: 1, y: -1}
   - {x: -1, y: 0}
+  - {x: -1, y: 1}
+  - {x: -1, y: -1}
+  - {x: 1, y: -1}
   - {x: 1, y: 0}
+  - {x: 1, y: 1}
   isSliding: 0
-  maxSlidable: 0

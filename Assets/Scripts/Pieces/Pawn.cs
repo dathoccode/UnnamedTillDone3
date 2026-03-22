@@ -13,16 +13,19 @@ public class Pawn : ChessPiece
 
         if (!hasMoved)
         {
-            hasMoved = true;
-            validMoves.Add(new Vector2Int(0, 2));
+            validMoves.Add(new Vector2Int(BoardIndex.x, BoardIndex.y + 2));
         }
 
         // Pawn can take enemy's piece in left and right forward position
-        if (board[BoardIndex.x + 1, BoardIndex.y + 1].Color != this.Color)
+        if (IsInsideBoard(new Vector2Int(BoardIndex.x + 1, BoardIndex.y + 1)) && 
+            board[BoardIndex.x + 1, BoardIndex.y + 1] != null &&
+            board[BoardIndex.x + 1, BoardIndex.y + 1].Color != this.Color)
         {
             validMoves.Add(new Vector2Int(1, 1));
         }
-        if (board[BoardIndex.x - 1, BoardIndex.y + 1].Color != this.Color)
+        if (IsInsideBoard(new Vector2Int(BoardIndex.x - 1, BoardIndex.y + 1)) &&
+            board[BoardIndex.x - 1, BoardIndex.y + 1] != null &&
+            board[BoardIndex.x - 1, BoardIndex.y + 1].Color != this.Color)
         {
             validMoves.Add(new Vector2Int(-1, 1));
         }

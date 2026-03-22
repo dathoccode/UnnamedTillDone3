@@ -9,16 +9,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ecedd130885d13c48afa571fa23aa0df, type: 3}
+  m_Script: {fileID: 11500000, guid: 739a70d5876d2554fad19525e49d2052, type: 3}
   m_Name: Rook
-  m_EditorClassIdentifier: Assembly-CSharp::PieceData
+  m_EditorClassIdentifier: Assembly-CSharp::PieceSO
   type: 1
   whiteSprite: {fileID: -8461961984556485647, guid: c04918a5517f2134897af323689891eb, type: 3}
   blackSprite: {fileID: -5468955912791914103, guid: e1d4fd70dc844054399ce5ae1cde7e28, type: 3}
   movePatterns:
-  - {x: 0, y: -1}
-  - {x: -1, y: 0}
   - {x: 0, y: 1}
+  - {x: 0, y: -1}
   - {x: 1, y: 0}
+  - {x: -1, y: 0}
   isSliding: 1
-  maxSlidable: 8

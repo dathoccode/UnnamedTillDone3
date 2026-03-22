@@ -1,18 +1,24 @@
+using System.Collections.Generic;
 using UnityEngine;
 
-public class PieceFactory
+public class PieceFactory : MonoBehaviour 
 {
-    public static ChessPiece CreatePiece(PieceType type, TeamColor color)
+    [SerializeField] private List<PiecePrefabEntry> prefabList;
+
+    public ChessPiece CreatePiece(PieceType type, TeamColor color, Vector2Int pos)
     {
-        switch (type)
+        ChessPiece piece;
+        foreach (var prefab in prefabList)
         {
-            case PieceType.Pawn: return new Pawn(color);
-            case PieceType.Rook: return new Rook(color);
-            case PieceType.Knight: return new Knight(color);
-            case PieceType.Bishop: return new Bishop(color);
-            case PieceType.Queen: return new Queen(color);
-            case PieceType.King: return new King(color);
-            default: return null;
+            if (prefab.pieceType == type)
+            {
+                piece = GameObject.Instantiate(prefab.piecePrefab, 
+                    new Vector3(pos.x, pos.y, 0), 
+                    Quaternion.identity);
+                piece.InitailizePiece(type, color);
+                return piece;
+            }
         }
+        return null;
     }
 }

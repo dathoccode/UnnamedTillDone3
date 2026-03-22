@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &5951811794518211521
+--- !u!1 &101491219843395575
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,10 +8,10 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1279648861229170300}
-  - component: {fileID: 1757881750662824477}
-  - component: {fileID: 1601485590023936327}
-  - component: {fileID: 1775004428450077689}
+  - component: {fileID: 8097794189385265894}
+  - component: {fileID: 1091946222005330121}
+  - component: {fileID: 5569295511836415823}
+  - component: {fileID: 992808630932283433}
   m_Layer: 0
   m_Name: PiecePrefab
   m_TagString: Untagged
@@ -19,29 +19,29 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1279648861229170300
+--- !u!4 &8097794189385265894
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5951811794518211521}
+  m_GameObject: {fileID: 101491219843395575}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.83007, y: 0.72709, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!212 &1757881750662824477
+--- !u!212 &1091946222005330121
 SpriteRenderer:
   serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5951811794518211521}
+  m_GameObject: {fileID: 101491219843395575}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0
@@ -93,13 +93,13 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!61 &1601485590023936327
+--- !u!61 &5569295511836415823
 BoxCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5951811794518211521}
+  m_GameObject: {fileID: 101491219843395575}
   m_Enabled: 1
   serializedVersion: 3
   m_Density: 1
@@ -139,19 +139,15 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.8, y: 0.87777776}
   m_EdgeRadius: 0
---- !u!114 &1775004428450077689
+--- !u!114 &992808630932283433
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5951811794518211521}
-  m_Enabled: 1
+  m_GameObject: {fileID: 101491219843395575}
+  m_Enabled: 0
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b6f26eece4c51754e9c05d968beca640, type: 3}
+  m_Script: {fileID: 11500000, guid: 3cf7e49ba66e1ba4fb1df4161e710f4b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ChessPiece
-  spriteRenderer: {fileID: 0}
-  PieceSO: {fileID: 0}
-  Color: 0
-  BoardIndex: {x: 0, y: 0}
+  m_EditorClassIdentifier: Assembly-CSharp::FollowMouse

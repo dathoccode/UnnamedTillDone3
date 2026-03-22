@@ -350,6 +350,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1097642764}
   - component: {fileID: 1097642763}
+  - component: {fileID: 1097642765}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -371,6 +372,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   board: {fileID: 1231844406}
   currentPiece: {fileID: 0}
+  curTurn: 0
+  curValidMoves: []
 --- !u!4 &1097642764
 Transform:
   m_ObjectHideFlags: 0
@@ -386,6 +389,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1097642765
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1097642762}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df3dbf1c4db5af0429efaa51f642cb16, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PieceFactory
+  prefabList: []
 --- !u!1 &1231844402
 GameObject:
   m_ObjectHideFlags: 0
@@ -1194,8 +1210,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 606b429bf45ac7f46909cfab97ef2680, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Board
-  piecePrefab: {fileID: 1775004428450077689, guid: c0139471ba1f8814884e40b4bcea9ac2, type: 3}
-  tilemap: {fileID: 0}
+  piecePrefab: {fileID: 101491219843395575, guid: d0452f6a7ff95a84eaaff4c7a5832c4b, type: 3}
+  tilemap: {fileID: 1231844405}
   holder: {fileID: 1727009663}
 --- !u!1 &1727009663
 GameObject:
@@ -1347,6 +1363,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChessPiece
   spriteRenderer: {fileID: 0}
+  PieceSO: {fileID: 0}
+  Color: 0
+  BoardIndex: {x: 0, y: 0}
+  gameManager: {fileID: 0}
 --- !u!212 &903069554701618988
 SpriteRenderer:
   serializedVersion: 2

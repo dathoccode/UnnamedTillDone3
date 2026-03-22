@@ -8,33 +8,16 @@ using UnityEngine.InputSystem;
 public class ChessPiece : MonoBehaviour
 {
     [SerializeField] private SpriteRenderer spriteRenderer;
-    public PieceData PieceSO;
+    public PieceSO PieceSO;
     public TeamColor Color;
     public Vector2Int BoardIndex;
 
-    //Movement
-    private bool isDragging = false;
+    [SerializeField] private GameManager gameManager;
 
-    void Update()
-    {
-        if (Mouse.current == null) return;
-
-        Vector2 mouseScreen = Mouse.current.position.ReadValue();
-        Vector2 mouseWorld = Camera.main.ScreenToWorldPoint(mouseScreen);
-
-        if (Mouse.current.leftButton.wasPressedThisFrame) 
-            OnMousePressed(mouseWorld);
-
-        if (Mouse.current.leftButton.wasReleasedThisFrame && isDragging) 
-            OnMouseReleased(mouseWorld);
-
-        if (isDragging) OnDrag(mouseWorld);
-    }
-
-    public ChessPiece InstantiatePiece(PieceType type, TeamColor color)
+    public ChessPiece InitailizePiece(PieceType type, TeamColor color)
     {
         
-        this.PieceSO = Resources.Load<PieceData>("PieceData/" + type.ToString());
+        this.PieceSO = Resources.Load<PieceSO>("PieceData/" + type.ToString());
         if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
 
         spriteRenderer.sprite = color == TeamColor.White ? PieceSO.whiteSprite : PieceSO.blackSprite;
@@ -61,32 +44,9 @@ public class ChessPiece : MonoBehaviour
              Mathf.RoundToInt(transform.position.y));
     }
 
-    private void OnMousePressed(Vector2 mouseWorld)
-    {
-        RaycastHit2D hit = Physics2D.Raycast(mouseWorld, Vector2.zero);
-
-        if (hit.collider != null && hit.collider.gameObject == gameObject)
-        {
-            isDragging = true;
-            GameManager.Instance.SetCurrentPiece(GetComponent<ChessPiece>());
-        }
-    }
-
-    private void OnMouseReleased(Vector2 mouseWorld)
-    {
-        isDragging = false;
-        GameManager.Instance.OnPieceMove(RoundPosition());
-    }
-
-    private void OnDrag(Vector2 mouseWorld)
-    {
-        transform.position = new Vector3(mouseWorld.x, mouseWorld.y, transform.position.z);
-    }
-
     public virtual List<Vector2Int> GetAllValidMove(ChessPiece[,] board) 
     {
         List<Vector2Int> validMoves = new();
-
         foreach (var pattern in PieceSO.movePatterns)
         {
             Vector2Int pos = BoardIndex + pattern;
@@ -116,6 +76,17 @@ public class ChessPiece : MonoBehaviour
 
         }
 
+        // Reverse moves if piece is in black team cause they move upside down
+        if (Color == TeamColor.Black)
+        {
+            for(int i = 0; i < validMoves.Count; i++)
+            {
+                Vector2Int temp = validMoves[i];
+                validMoves.RemoveAt(i);
+                validMoves.Add(temp);
+            }
+        }
+
         return validMoves;
     }
 
@@ -133,8 +104,13 @@ public class ChessPiece : MonoBehaviour
         return b == 0 ? a : GCD(b, a % b);
     }
 
-    private bool IsInsideBoard(Vector2Int pos)
+    protected bool IsInsideBoard(Vector2Int pos)
     {
-        return pos.x > 0 && pos.x < 8 && pos.y > 0 && pos.y < 8;
+        return pos.x >= 0 && pos.x < 8 && pos.y >= 0 && pos.y < 8;
+    }
+
+    public void EnableFollowMouse()
+    {
+        GetComponent<FollowMouse>().enabled = true;
     }
 }

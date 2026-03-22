@@ -17,12 +17,11 @@ public enum TeamColor
 }
 
 [CreateAssetMenu(fileName = "PieceData", menuName = "ScriptableObjects/PieceData")]
-public class PieceData : ScriptableObject
+public class PieceSO : ScriptableObject
 {
     public PieceType type;
     public Sprite whiteSprite;
     public Sprite blackSprite;
     public Vector2Int[] movePatterns;
     public bool isSliding;
-    public int maxSlidable;
 }
