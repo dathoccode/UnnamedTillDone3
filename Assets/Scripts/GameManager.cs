@@ -35,13 +35,7 @@ public class GameManager : MonoBehaviour
     {
         currentPiece = newPiece;
 
-        List<Vector2Int> array = currentPiece.GetAllValidMove(board.grid);
-
-        Debug.Log("valid move: ");
-        foreach (var piece in array)
-        {
-            Debug.Log(piece);
-        }
+        List<Vector2Int> array = currentPiece.GetAllValidMove(board);
     }
 
     private void ProcessMouseInput()
@@ -83,9 +77,7 @@ public class GameManager : MonoBehaviour
                 // Make piece follow mouse position
                 currentPiece.EnableFollowMouse();
                 // Take all valid moves of the piece
-                curValidMoves = collidedPiece.GetAllValidMove(board.grid);
-
-               
+                curValidMoves = collidedPiece.GetAllValidMove(board);
             }
         }
     }
@@ -93,14 +85,25 @@ public class GameManager : MonoBehaviour
     private void OnMouseReleased(Vector2 mouseWorld)
     {
         if (currentPiece == null) return;
+
         // Disable follow mouse position component of chess piece
         currentPiece.GetComponent<FollowMouse>().enabled = false;
 
         Vector2Int newPos = new (Mathf.RoundToInt(mouseWorld.x), Mathf.RoundToInt(mouseWorld.y));
-        
-        if (curValidMoves.Contains(newPos))
+
+        Vector2Int move = newPos - currentPiece.BoardIndex;
+
+        if (curValidMoves.Contains(move))
         {
-            throw new NotImplementedException();
+            board.MoveOnBoard(currentPiece.BoardIndex, newPos);
+
+            currentPiece.MoveTo(newPos);
+
+            // Switch turn
+            curTurn = curTurn == TeamColor.White ? TeamColor.Black : TeamColor.White;
+
+            // Reset current piece
+            currentPiece = null;
         }
         else
         {

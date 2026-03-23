@@ -5,13 +5,13 @@ public class King : ChessPiece
 {
     public bool hasMoved;
 
-    public override  List<Vector2Int> GetAllValidMove(ChessPiece[,] board)
+    public override  List<Vector2Int> GetAllValidMove(Board board)
     {
         List<Vector2Int> validMoves = base.GetAllValidMove(board);
 
         if (!hasMoved)
         {
-            ChessPiece leftRook = board[0, BoardIndex.y];
+            ChessPiece leftRook = board.GetPiece(0, BoardIndex.y);
             if (leftRook != null && leftRook.PieceSO.type == PieceType.Rook) {
                 if (!leftRook.GetComponent<Rook>().hasMoved)
                 {
@@ -19,7 +19,7 @@ public class King : ChessPiece
                 }
             }
 
-            ChessPiece rightRook = board[0, BoardIndex.y];
+            ChessPiece rightRook = board.GetPiece(7, BoardIndex.y);
             if (rightRook != null && rightRook.PieceSO.type == PieceType.Rook)
             {
                 if (!rightRook.GetComponent<Rook>().hasMoved)

@@ -19,7 +19,7 @@ public class ChessPiece : MonoBehaviour
         
         this.PieceSO = Resources.Load<PieceSO>("PieceData/" + type.ToString());
         if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
-
+        Color = color;
         spriteRenderer.sprite = color == TeamColor.White ? PieceSO.whiteSprite : PieceSO.blackSprite;
 
         BoardIndex = new Vector2Int((int)this.transform.position.x, (int)this.transform.position.y);
@@ -37,32 +37,32 @@ public class ChessPiece : MonoBehaviour
         transform.position = new Vector2(BoardIndex.x, BoardIndex.y);
     }
 
-    Vector2Int RoundPosition()
-    {
-        return new Vector2Int(
-             Mathf.RoundToInt(transform.position.x),
-             Mathf.RoundToInt(transform.position.y));
-    }
-
-    public virtual List<Vector2Int> GetAllValidMove(ChessPiece[,] board) 
+    public virtual List<Vector2Int> GetAllValidMove(Board board) 
     {
         List<Vector2Int> validMoves = new();
         foreach (var pattern in PieceSO.movePatterns)
         {
-            Vector2Int pos = BoardIndex + pattern;
+            // Reverse pattern for black piece
+            Vector2Int tempPattern = pattern;
+            if (Color == TeamColor.Black)
+            {
+                tempPattern = new(pattern.x * -1, pattern.y * -1);
+            }
+
+            Vector2Int pos = BoardIndex + tempPattern;
 
             while(IsInsideBoard(pos))
             {
-                
-                if (!board[pos.x, pos.y] || board[pos.x, pos.y].Color != this.Color)
+                if (!board.GetPiece(pos) || board.GetPiece(pos).Color != this.Color)
                 {
-                    validMoves.Add(pos);
+                    validMoves.Add(tempPattern);
                 }
                 
                 // There's an ally piece on the way
-                if (board[pos.x, pos.y] && board[pos.x, pos.y].Color == this.Color) break;
-
-                
+                if (board.GetPiece(pos) && board.GetPiece(pos).Color == this.Color)
+                {
+                    break;
+                }
 
                 // This piece can't slide
                 if (!this.PieceSO.isSliding)
@@ -70,23 +70,23 @@ public class ChessPiece : MonoBehaviour
                     break;
                 }
 
-                // Translate pos by pattern when piece can slide
-                pos += pattern;
+                // Translate pos by tempPattern when piece can slide
+                if(Color == TeamColor.White)
+                {
+                    tempPattern += pattern;
+                    pos += pattern;
+                }
+                else
+                {
+                    tempPattern -= pattern;
+                    pos -= pattern;
+                }
+
             }
 
         }
 
-        // Reverse moves if piece is in black team cause they move upside down
-        if (Color == TeamColor.Black)
-        {
-            for(int i = 0; i < validMoves.Count; i++)
-            {
-                Vector2Int temp = validMoves[i];
-                validMoves.RemoveAt(i);
-                validMoves.Add(temp);
-            }
-        }
-
+      
         return validMoves;
     }
 

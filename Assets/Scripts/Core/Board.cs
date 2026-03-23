@@ -21,33 +21,45 @@ public class Board : MonoBehaviour
         {
             foreach (var position in piece.Value)
             {
-                GameObject prefab = Instantiate(piecePrefab,
-                    new Vector3(position.x, position.y, 0),
-                    Quaternion.identity);
-                ChessPiece newWhitePiece = AddPieceComponent(piece.Key, prefab);
-                newWhitePiece.InitailizePiece(piece.Key, TeamColor.White);
-                newWhitePiece.transform.SetParent(holder.transform, false);
-                newWhitePiece.name = piece.Key.ToString() + position;
-                grid[position.x, position.y] = newWhitePiece;
-
-
-                GameObject prefab2 = Instantiate(piecePrefab,
-                    new Vector3(position.x, 7 - position.y, 0),
-                    Quaternion.identity);
-                ChessPiece newBlackPiece = AddPieceComponent(piece.Key, prefab2);
-                newBlackPiece.InitailizePiece(piece.Key, TeamColor.Black);
-                newBlackPiece.transform.SetParent(holder.transform, false);
-                newBlackPiece.name = piece.Key.ToString() + position;
-                grid[position.x, 7 - position.y] = newBlackPiece;
+                SpawnPiece(piece.Key, position, TeamColor.White);
+                SpawnPiece(piece.Key, new Vector2Int(position.x, 7 - position.y), TeamColor.Black);
             }
         }
     }
 
+    private void SpawnPiece(PieceType type, Vector2Int pos, TeamColor color)
+    {
+        GameObject obj = Instantiate(piecePrefab,
+            new Vector3(pos.x, pos.y, 0),
+            Quaternion.identity);
+
+        ChessPiece piece = AddPieceComponent(type, obj);
+        piece.InitailizePiece(type, color);
+
+        piece.transform.SetParent(holder.transform, false);
+        piece.name = $"{color}_{type}_{pos.x}_{pos.y}";
+
+        grid[pos.x, pos.y] = piece;
+    }
+
     public void MoveOnBoard(Vector2Int from, Vector2Int to)
     {
+        if (grid[to.x, to.y] != null)
+        {
+            Destroy(grid[to.x, to.y].gameObject);
+        }
         grid[to.x, to.y] = grid[from.x, from.y];
         grid[from.x, from.y] = null;
+    }
 
+    public ChessPiece GetPiece(Vector2Int pos)
+    {
+        return grid[pos.x, pos.y];
+    }
+
+    public ChessPiece GetPiece(int x, int y)
+    {
+        return grid[x, y];
     }
 
     private ChessPiece AddPieceComponent(PieceType type, GameObject prefab)

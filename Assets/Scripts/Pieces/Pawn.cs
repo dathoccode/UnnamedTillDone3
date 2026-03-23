@@ -5,29 +5,33 @@ public class Pawn : ChessPiece
 {
     public bool hasMoved;
 
-    public override  List<Vector2Int> GetAllValidMove(ChessPiece[,] board)
+    public override  List<Vector2Int> GetAllValidMove(Board board)
     {
         List<Vector2Int> validMoves = base.GetAllValidMove(board);
 
-        // Pawn can move 2 cell formard in the first move
+        Vector2Int newMove = Color == TeamColor.White ? new(0, 2) : new(0, -2);
 
+        // Pawn can move 2 cell formard in the first move
         if (!hasMoved)
         {
-            validMoves.Add(new Vector2Int(BoardIndex.x, BoardIndex.y + 2));
+            validMoves.Add(newMove);
         }
 
         // Pawn can take enemy's piece in left and right forward position
-        if (IsInsideBoard(new Vector2Int(BoardIndex.x + 1, BoardIndex.y + 1)) && 
-            board[BoardIndex.x + 1, BoardIndex.y + 1] != null &&
-            board[BoardIndex.x + 1, BoardIndex.y + 1].Color != this.Color)
+        newMove = Color == TeamColor.White ? new(1, 1) : new(1, -1);
+        if (IsInsideBoard(BoardIndex + newMove) && 
+            board.GetPiece(BoardIndex + newMove) != null &&
+            board.GetPiece(BoardIndex + newMove).Color != this.Color)
         {
-            validMoves.Add(new Vector2Int(1, 1));
+            validMoves.Add(newMove);
         }
-        if (IsInsideBoard(new Vector2Int(BoardIndex.x - 1, BoardIndex.y + 1)) &&
-            board[BoardIndex.x - 1, BoardIndex.y + 1] != null &&
-            board[BoardIndex.x - 1, BoardIndex.y + 1].Color != this.Color)
+
+        newMove = Color == TeamColor.White ? new(-1, 1) : new(-1, -1);
+        if (IsInsideBoard(BoardIndex + newMove) &&
+            board.GetPiece(BoardIndex + newMove) != null &&
+            board.GetPiece(BoardIndex + newMove).Color != this.Color)
         {
-            validMoves.Add(new Vector2Int(-1, 1));
+            validMoves.Add(newMove);
         }
 
         return validMoves;

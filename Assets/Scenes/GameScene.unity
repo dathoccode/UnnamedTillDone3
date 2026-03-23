@@ -398,10 +398,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 1097642762}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: df3dbf1c4db5af0429efaa51f642cb16, type: 3}
+  m_Script: {fileID: 11500000, guid: f211486fa4b52fe4d80ca62264c25a58, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PieceFactory
-  prefabList: []
+  m_EditorClassIdentifier: Assembly-CSharp::GameManager
+  board: {fileID: 1231844406}
+  currentPiece: {fileID: 0}
+  curTurn: 0
+  curValidMoves: []
 --- !u!1 &1231844402
 GameObject:
   m_ObjectHideFlags: 0
