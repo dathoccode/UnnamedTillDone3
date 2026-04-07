@@ -5,9 +5,9 @@ public class King : ChessPiece
 {
     public bool hasMoved;
 
-    public override  List<Vector2Int> GetAllValidMove(Board board)
+    public override  List<Vector2Int> GetAllValidMoves(Board board)
     {
-        List<Vector2Int> validMoves = base.GetAllValidMove(board);
+        List<Vector2Int> validMoves = base.GetAllValidMoves(board);
 
         if (!hasMoved)
         {
@@ -30,5 +30,11 @@ public class King : ChessPiece
         }
        
         return validMoves;
+    }
+
+    public override void MoveTo(Vector2Int newPos)
+    {
+        base.MoveTo(newPos);
+        hasMoved = true;
     }
 }

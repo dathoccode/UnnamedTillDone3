@@ -37,7 +37,7 @@ public class ChessPiece : MonoBehaviour
         transform.position = new Vector2(BoardIndex.x, BoardIndex.y);
     }
 
-    public virtual List<Vector2Int> GetAllValidMove(Board board) 
+    public virtual List<Vector2Int> GetAllValidMoves(Board board) 
     {
         List<Vector2Int> validMoves = new();
         foreach (var pattern in PieceSO.movePatterns)

@@ -35,7 +35,7 @@ public class GameManager : MonoBehaviour
     {
         currentPiece = newPiece;
 
-        List<Vector2Int> array = currentPiece.GetAllValidMove(board);
+        List<Vector2Int> array = currentPiece.GetAllValidMoves(board);
     }
 
     private void ProcessMouseInput()
@@ -77,7 +77,7 @@ public class GameManager : MonoBehaviour
                 // Make piece follow mouse position
                 currentPiece.EnableFollowMouse();
                 // Take all valid moves of the piece
-                curValidMoves = collidedPiece.GetAllValidMove(board);
+                curValidMoves = collidedPiece.GetAllValidMoves(board);
             }
         }
     }
@@ -95,15 +95,7 @@ public class GameManager : MonoBehaviour
 
         if (curValidMoves.Contains(move))
         {
-            board.MoveOnBoard(currentPiece.BoardIndex, newPos);
-
-            currentPiece.MoveTo(newPos);
-
-            // Switch turn
-            curTurn = curTurn == TeamColor.White ? TeamColor.Black : TeamColor.White;
-
-            // Reset current piece
-            currentPiece = null;
+            MovePiece(newPos);
         }
         else
         {
@@ -113,11 +105,26 @@ public class GameManager : MonoBehaviour
     
     }
 
-    public void OnPieceMove(Vector2Int newPos)
+    public void MovePiece(Vector2Int newPos)
     {
+        
+        if (!board.OnPieceMove(currentPiece.BoardIndex, newPos))
+        {
+            return;
+        }
 
+        // Move piece in world
+        currentPiece.MoveTo(newPos);
 
-        // Change to opponent's turn
+        // Switch turn
         curTurn = curTurn == TeamColor.White ? TeamColor.Black : TeamColor.White;
+
+        // Reset current piece
+        currentPiece = null;
+    }
+
+    private void HandleCastling()
+    {
+        if (currentPiece.PieceSO.type != PieceType.King) return;
     }
 }
