@@ -26,7 +26,7 @@ public class ChessPiece : MonoBehaviour
         return this;
     }
 
-    public void MoveTo(Vector2Int newPos)
+    public virtual void MoveTo(Vector2Int newPos)
     {
         BoardIndex = newPos;
         transform.position = new Vector2(newPos.x, newPos.y);
@@ -37,9 +37,10 @@ public class ChessPiece : MonoBehaviour
         transform.position = new Vector2(BoardIndex.x, BoardIndex.y);
     }
 
-    public virtual List<Vector2Int> GetAllValidMoves(Board board) 
+    // Get all moves by pattern of piece
+    public virtual List<Vector2Int> GetPatternMoves(Board board)
     {
-        List<Vector2Int> validMoves = new();
+        List<Vector2Int> patternMoves = new();
         foreach (var pattern in PieceSO.movePatterns)
         {
             // Reverse pattern for black piece
@@ -51,13 +52,20 @@ public class ChessPiece : MonoBehaviour
 
             Vector2Int pos = BoardIndex + tempPattern;
 
-            while(IsInsideBoard(pos))
+            while (IsInsideBoard(pos))
             {
-                if (!board.GetPiece(pos) || board.GetPiece(pos).Color != this.Color)
+                if (!board.GetPiece(pos))
                 {
-                    validMoves.Add(tempPattern);
+                    patternMoves.Add(tempPattern);
                 }
-                
+
+                // There's an opponent piece on the way -> can move to this position but can't move further
+                if (board.GetPiece(pos) && board.GetPiece(pos).Color != this.Color)
+                {
+                    patternMoves.Add(tempPattern);
+                    break;
+                }
+
                 // There's an ally piece on the way
                 if (board.GetPiece(pos) && board.GetPiece(pos).Color == this.Color)
                 {
@@ -71,7 +79,7 @@ public class ChessPiece : MonoBehaviour
                 }
 
                 // Translate pos by tempPattern when piece can slide
-                if(Color == TeamColor.White)
+                if (Color == TeamColor.White)
                 {
                     tempPattern += pattern;
                     pos += pattern;
@@ -83,25 +91,38 @@ public class ChessPiece : MonoBehaviour
                 }
 
             }
-
         }
 
-      
+        return patternMoves;
+    }
+
+    public virtual List<Vector2Int> GetAttackMoves(Board board)
+    {
+        return GetPatternMoves(board);
+    }
+
+    public virtual List<Vector2Int> GetSpecialMoves(Board board)
+    {
+        return new();
+    }
+
+    public virtual List<Vector2Int> GetValidMoves(Board board)
+    {
+        List<Vector2Int> validMoves = GetPatternMoves(board);
+        validMoves.AddRange(GetSpecialMoves(board));
+
+        foreach (var move in validMoves)
+        {
+            Vector2Int newPos = BoardIndex + move;
+            ChessPiece targetPiece = board.GetPiece(newPos);
+
+            // If there's an ally piece on the way, this move is invalid
+            if (targetPiece && targetPiece.Color == this.Color )
+            {
+                validMoves.Remove(move);
+            }
+        }
         return validMoves;
-    }
-
-    private Vector2Int NormalizeDir(Vector2Int dir)
-    {
-        int gcd = GCD(dir.x, dir.y);
-        int x = dir.x / Mathf.Abs(gcd);
-        int y = dir.y / Mathf.Abs(gcd);
-
-        return new Vector2Int(x, y);
-    }
-
-    int GCD(int a, int b)
-    {
-        return b == 0 ? a : GCD(b, a % b);
     }
 
     protected bool IsInsideBoard(Vector2Int pos)

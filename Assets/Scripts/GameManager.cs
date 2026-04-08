@@ -14,7 +14,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Board board;
     public ChessPiece currentPiece;
     public TeamColor curTurn;
-    public List<Vector2Int> curValidMoves = new List<Vector2Int>();
+    public List<Vector2Int> curValidMoves = new();
 
     private void Awake()
     {
@@ -35,7 +35,8 @@ public class GameManager : MonoBehaviour
     {
         currentPiece = newPiece;
 
-        List<Vector2Int> array = currentPiece.GetAllValidMoves(board);
+        // Take all valid moves of the piece
+        curValidMoves = currentPiece.GetValidMoves(board);
     }
 
     private void ProcessMouseInput()
@@ -76,8 +77,6 @@ public class GameManager : MonoBehaviour
 
                 // Make piece follow mouse position
                 currentPiece.EnableFollowMouse();
-                // Take all valid moves of the piece
-                curValidMoves = collidedPiece.GetAllValidMoves(board);
             }
         }
     }
@@ -110,6 +109,7 @@ public class GameManager : MonoBehaviour
         
         if (!board.OnPieceMove(currentPiece.BoardIndex, newPos))
         {
+            currentPiece.RecoverPosition();
             return;
         }
 

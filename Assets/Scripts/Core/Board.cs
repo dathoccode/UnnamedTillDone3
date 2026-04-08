@@ -10,6 +10,8 @@ public class Board : MonoBehaviour
     [SerializeField] private Tilemap tilemap;
     [SerializeField] private GameObject holder;
 
+    private bool[,] whiteAttackMap = new bool[8, 8], blackAttackMap = new bool[8,8];
+
     private void Awake()
     {
         tilemap = GetComponent<Tilemap>();
@@ -42,16 +44,6 @@ public class Board : MonoBehaviour
         grid[pos.x, pos.y] = piece;
     }
 
-    public void MoveOnBoard(Vector2Int from, Vector2Int to)
-    {
-        if (grid[to.x, to.y] != null)
-        {
-            Destroy(grid[to.x, to.y].gameObject);
-        }
-        grid[to.x, to.y] = grid[from.x, from.y];
-        grid[from.x, from.y] = null;
-    }
-
     public ChessPiece GetPiece(Vector2Int pos)
     {
         return grid[pos.x, pos.y];
@@ -75,5 +67,88 @@ public class Board : MonoBehaviour
             default:
                 return prefab.AddComponent<Queen>();
         }
+    }
+
+    private void ClearAttackMap()
+    {
+        whiteAttackMap = new bool[8, 8];
+        blackAttackMap = new bool[8, 8];
+    }
+
+    private void BuildAttackMap()
+    {
+        ClearAttackMap();
+
+        foreach (var piece in grid)
+        {
+            if (piece == null) continue;
+            var attackMoves = piece.GetAttackMoves(this);
+            Debug.Log($"Building Attack map with: {piece.name} and there are {attackMoves.Count} attack moves");
+            foreach (var move in attackMoves)
+            {
+                Vector2Int pos = piece.BoardIndex + move;
+                if (piece.Color == TeamColor.White)
+                {
+                    whiteAttackMap[pos.x, pos.y] = true;
+                    Debug.Log($"White attacks {pos}");
+                }
+                else
+                {
+                    blackAttackMap[pos.x, pos.y] = true;
+                    Debug.Log($"Black attacks {pos}"); 
+                }
+            }
+        }
+    }
+
+    public bool OnPieceMove(Vector2Int from, Vector2Int to)
+    {
+        // backu
+        ChessPiece backupPiece = GetPiece(to);
+        grid[to.x, to.y] = grid[from.x, from.y];
+        grid[from.x, from.y] = null;
+
+        BuildAttackMap();
+
+        if (IsKingChecked())
+        {
+            grid[from.x, from.y] = grid[to.x, to.y];
+            grid[to.x, to.y] = backupPiece;
+            return false;
+        }
+
+        if (backupPiece != null) Destroy(backupPiece.gameObject);
+
+
+        return true;
+    }
+
+    Vector2Int GetKingPosition(TeamColor color)
+    {
+        foreach (var piece in grid)
+        {
+            if (piece != null && piece.PieceSO.type == PieceType.King && piece.Color == color)
+            {
+                return piece.BoardIndex;
+            }
+        }
+        return new Vector2Int(-1, -1);
+    }
+
+    private bool IsKingChecked()
+    {
+        Vector2Int kingPos = GetKingPosition(GameManager.Instance.curTurn);
+        if (GameManager.Instance.curTurn == TeamColor.White && blackAttackMap[kingPos.x, kingPos.y])
+        {
+            Debug.Log("White King is in check!");
+            return true;
+        }
+        if (GameManager.Instance.curTurn == TeamColor.Black && whiteAttackMap[kingPos.x, kingPos.y])
+        {
+           
+            Debug.Log("Black King is in check!");
+            return true;
+        }
+        return false;
     }
 }
