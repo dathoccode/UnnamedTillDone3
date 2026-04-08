@@ -114,10 +114,15 @@ public class ChessPiece : MonoBehaviour
         foreach (var move in validMoves)
         {
             Vector2Int newPos = BoardIndex + move;
+            if (!IsInsideBoard(newPos))
+            {
+                Debug.LogError("Move " + move + " is outside board. Board index " + BoardIndex);
+                continue;
+            }
             ChessPiece targetPiece = board.GetPiece(newPos);
 
             // If there's an ally piece on the way, this move is invalid
-            if (targetPiece && targetPiece.Color == this.Color )
+            if (targetPiece && targetPiece.Color == this.Color)
             {
                 validMoves.Remove(move);
             }

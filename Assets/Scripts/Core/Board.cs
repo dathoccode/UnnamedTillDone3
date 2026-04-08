@@ -5,6 +5,9 @@ using UnityEngine.Tilemaps;
 
 public class Board : MonoBehaviour
 {
+    private static Board instance;
+    public static Board Instance => instance;
+
     public ChessPiece[,] grid = new ChessPiece[8, 8];
     [SerializeField] private GameObject piecePrefab;
     [SerializeField] private Tilemap tilemap;
@@ -14,6 +17,7 @@ public class Board : MonoBehaviour
 
     private void Awake()
     {
+        if (instance == null) instance = this;
         tilemap = GetComponent<Tilemap>();
     }
 
@@ -83,32 +87,33 @@ public class Board : MonoBehaviour
         {
             if (piece == null) continue;
             var attackMoves = piece.GetAttackMoves(this);
-            Debug.Log($"Building Attack map with: {piece.name} and there are {attackMoves.Count} attack moves");
             foreach (var move in attackMoves)
             {
                 Vector2Int pos = piece.BoardIndex + move;
                 if (piece.Color == TeamColor.White)
                 {
                     whiteAttackMap[pos.x, pos.y] = true;
-                    Debug.Log($"White attacks {pos}");
                 }
                 else
                 {
                     blackAttackMap[pos.x, pos.y] = true;
-                    Debug.Log($"Black attacks {pos}"); 
                 }
             }
         }
     }
 
+    public bool IsSquareAttacked(Vector2Int pos, TeamColor byColor)
+    {
+        BuildAttackMap();
+        if (byColor == TeamColor.White) return blackAttackMap[pos.x, pos.y];
+        return whiteAttackMap[pos.x, pos.y];
+    }
     public bool OnPieceMove(Vector2Int from, Vector2Int to)
     {
         // backu
         ChessPiece backupPiece = GetPiece(to);
         grid[to.x, to.y] = grid[from.x, from.y];
         grid[from.x, from.y] = null;
-
-        BuildAttackMap();
 
         if (IsKingChecked())
         {
@@ -138,17 +143,6 @@ public class Board : MonoBehaviour
     private bool IsKingChecked()
     {
         Vector2Int kingPos = GetKingPosition(GameManager.Instance.curTurn);
-        if (GameManager.Instance.curTurn == TeamColor.White && blackAttackMap[kingPos.x, kingPos.y])
-        {
-            Debug.Log("White King is in check!");
-            return true;
-        }
-        if (GameManager.Instance.curTurn == TeamColor.Black && whiteAttackMap[kingPos.x, kingPos.y])
-        {
-           
-            Debug.Log("Black King is in check!");
-            return true;
-        }
-        return false;
+        return IsSquareAttacked(kingPos, GameManager.Instance.curTurn);
     }
 }
