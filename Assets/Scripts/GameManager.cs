@@ -73,9 +73,7 @@ public class GameManager : MonoBehaviour
         currentPiece.GetComponent<FollowMouse>().enabled = false;
 
         Vector2Int targetPos = new(Mathf.RoundToInt(mouseWorld.x), Mathf.RoundToInt(mouseWorld.y));
-        Vector2Int attemptedDelta = targetPos - currentPiece.BoardIndex;
-
-        Move chosenMove = currentLegalMoves.Find(move => move.MatchesDelta(currentPiece.BoardIndex, attemptedDelta));
+        Move chosenMove = currentLegalMoves.Find(move => move.MatchesTarget(currentPiece.BoardIndex, targetPos));
 
         if (chosenMove != null)
         {

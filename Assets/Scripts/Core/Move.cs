@@ -26,8 +26,8 @@ public class Move
 
     public Vector2Int Delta => To - From;
 
-    public bool MatchesDelta(Vector2Int origin, Vector2Int delta)
+    public bool MatchesTarget(Vector2Int origin, Vector2Int target)
     {
-        return From == origin && Delta == delta;
+        return From == origin && To == target;
     }
 }
