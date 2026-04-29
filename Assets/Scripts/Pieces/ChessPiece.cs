@@ -1,8 +1,5 @@
-﻿using NUnit.Framework;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(SpriteRenderer))]
 public class ChessPiece : MonoBehaviour
@@ -12,17 +9,15 @@ public class ChessPiece : MonoBehaviour
     public TeamColor Color;
     public Vector2Int BoardIndex;
 
-    [SerializeField] private GameManager gameManager;
-
     public ChessPiece InitailizePiece(PieceType type, TeamColor color)
     {
-        
-        this.PieceSO = Resources.Load<PieceSO>("PieceData/" + type.ToString());
+        PieceSO = Resources.Load<PieceSO>("PieceData/" + type);
         if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
+
         Color = color;
         spriteRenderer.sprite = color == TeamColor.White ? PieceSO.whiteSprite : PieceSO.blackSprite;
+        BoardIndex = new Vector2Int((int)transform.position.x, (int)transform.position.y);
 
-        BoardIndex = new Vector2Int((int)this.transform.position.x, (int)this.transform.position.y);
         return this;
     }
 
@@ -37,71 +32,48 @@ public class ChessPiece : MonoBehaviour
         transform.position = new Vector2(BoardIndex.x, BoardIndex.y);
     }
 
-    public virtual List<Vector2Int> GetAllValidMove(Board board) 
+    public virtual List<Move> GetLegalMoves(Board board)
     {
-        List<Vector2Int> validMoves = new();
+        List<Move> legalMoves = new();
+
         foreach (var pattern in PieceSO.movePatterns)
         {
-            // Reverse pattern for black piece
-            Vector2Int tempPattern = pattern;
-            if (Color == TeamColor.Black)
+            Vector2Int normalizedPattern = Color == TeamColor.Black
+                ? new Vector2Int(pattern.x * -1, pattern.y * -1)
+                : pattern;
+
+            Vector2Int offset = normalizedPattern;
+            Vector2Int target = BoardIndex + offset;
+
+            while (IsInsideBoard(target))
             {
-                tempPattern = new(pattern.x * -1, pattern.y * -1);
-            }
+                ChessPiece occupiedPiece = board.GetPiece(target);
 
-            Vector2Int pos = BoardIndex + tempPattern;
-
-            while(IsInsideBoard(pos))
-            {
-                if (!board.GetPiece(pos) || board.GetPiece(pos).Color != this.Color)
+                if (occupiedPiece == null)
                 {
-                    validMoves.Add(tempPattern);
-                }
-                
-                // There's an ally piece on the way
-                if (board.GetPiece(pos) && board.GetPiece(pos).Color == this.Color)
-                {
-                    break;
-                }
-
-                // This piece can't slide
-                if (!this.PieceSO.isSliding)
-                {
-                    break;
-                }
-
-                // Translate pos by tempPattern when piece can slide
-                if(Color == TeamColor.White)
-                {
-                    tempPattern += pattern;
-                    pos += pattern;
+                    legalMoves.Add(new Move(BoardIndex, target, MoveType.Normal));
                 }
                 else
                 {
-                    tempPattern -= pattern;
-                    pos -= pattern;
+                    if (occupiedPiece.Color != Color)
+                    {
+                        legalMoves.Add(new Move(BoardIndex, target, MoveType.Capture));
+                    }
+
+                    break;
                 }
 
-            }
+                if (!PieceSO.isSliding)
+                {
+                    break;
+                }
 
+                offset += normalizedPattern;
+                target = BoardIndex + offset;
+            }
         }
 
-      
-        return validMoves;
-    }
-
-    private Vector2Int NormalizeDir(Vector2Int dir)
-    {
-        int gcd = GCD(dir.x, dir.y);
-        int x = dir.x / Mathf.Abs(gcd);
-        int y = dir.y / Mathf.Abs(gcd);
-
-        return new Vector2Int(x, y);
-    }
-
-    int GCD(int a, int b)
-    {
-        return b == 0 ? a : GCD(b, a % b);
+        return legalMoves;
     }
 
     protected bool IsInsideBoard(Vector2Int pos)

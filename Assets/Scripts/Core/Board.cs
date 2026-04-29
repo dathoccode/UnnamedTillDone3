@@ -1,5 +1,3 @@
-using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -29,9 +27,7 @@ public class Board : MonoBehaviour
 
     private void SpawnPiece(PieceType type, Vector2Int pos, TeamColor color)
     {
-        GameObject obj = Instantiate(piecePrefab,
-            new Vector3(pos.x, pos.y, 0),
-            Quaternion.identity);
+        GameObject obj = Instantiate(piecePrefab, new Vector3(pos.x, pos.y, 0), Quaternion.identity);
 
         ChessPiece piece = AddPieceComponent(type, obj);
         piece.InitailizePiece(type, color);
@@ -42,14 +38,35 @@ public class Board : MonoBehaviour
         grid[pos.x, pos.y] = piece;
     }
 
-    public void MoveOnBoard(Vector2Int from, Vector2Int to)
+    public void ApplyMove(Move move)
     {
-        if (grid[to.x, to.y] != null)
+        ChessPiece movingPiece = grid[move.From.x, move.From.y];
+        if (movingPiece == null) return;
+
+        if (move.Type == MoveType.EnPassant)
         {
-            Destroy(grid[to.x, to.y].gameObject);
+            RemovePieceAt(move.CapturedSquare);
         }
-        grid[to.x, to.y] = grid[from.x, from.y];
-        grid[from.x, from.y] = null;
+        else if (grid[move.To.x, move.To.y] != null)
+        {
+            RemovePieceAt(move.To);
+        }
+
+        grid[move.To.x, move.To.y] = movingPiece;
+        grid[move.From.x, move.From.y] = null;
+
+        movingPiece.MoveTo(move.To);
+
+        if (movingPiece is Pawn pawn) pawn.hasMoved = true;
+        if (movingPiece is King king) king.hasMoved = true;
+        if (movingPiece is Rook rook) rook.hasMoved = true;
+    }
+
+    private void RemovePieceAt(Vector2Int pos)
+    {
+        if (grid[pos.x, pos.y] == null) return;
+        Destroy(grid[pos.x, pos.y].gameObject);
+        grid[pos.x, pos.y] = null;
     }
 
     public ChessPiece GetPiece(Vector2Int pos)

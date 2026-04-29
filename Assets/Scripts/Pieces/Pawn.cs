@@ -5,35 +5,66 @@ public class Pawn : ChessPiece
 {
     public bool hasMoved;
 
-    public override  List<Vector2Int> GetAllValidMove(Board board)
+    public override List<Move> GetLegalMoves(Board board)
     {
-        List<Vector2Int> validMoves = base.GetAllValidMove(board);
+        List<Move> legalMoves = new();
 
-        Vector2Int newMove = Color == TeamColor.White ? new(0, 2) : new(0, -2);
-
-        // Pawn can move 2 cell formard in the first move
-        if (!hasMoved)
+        int forward = Color == TeamColor.White ? 1 : -1;
+        Vector2Int oneStep = BoardIndex + new Vector2Int(0, forward);
+        if (IsInsideBoard(oneStep) && board.GetPiece(oneStep) == null)
         {
-            validMoves.Add(newMove);
+            legalMoves.Add(new Move(BoardIndex, oneStep, MoveType.Normal));
+
+            Vector2Int twoStep = BoardIndex + new Vector2Int(0, forward * 2);
+            if (!hasMoved && IsInsideBoard(twoStep) && board.GetPiece(twoStep) == null)
+            {
+                legalMoves.Add(new Move(BoardIndex, twoStep, MoveType.Normal));
+            }
         }
 
-        // Pawn can take enemy's piece in left and right forward position
-        newMove = Color == TeamColor.White ? new(1, 1) : new(1, -1);
-        if (IsInsideBoard(BoardIndex + newMove) && 
-            board.GetPiece(BoardIndex + newMove) != null &&
-            board.GetPiece(BoardIndex + newMove).Color != this.Color)
+        TryAddDiagonalCapture(board, legalMoves, new Vector2Int(1, forward));
+        TryAddDiagonalCapture(board, legalMoves, new Vector2Int(-1, forward));
+        TryAddEnPassant(board, legalMoves, forward);
+
+        return legalMoves;
+    }
+
+    private void TryAddDiagonalCapture(Board board, List<Move> legalMoves, Vector2Int diagonal)
+    {
+        Vector2Int target = BoardIndex + diagonal;
+        if (!IsInsideBoard(target)) return;
+
+        ChessPiece piece = board.GetPiece(target);
+        if (piece != null && piece.Color != Color)
         {
-            validMoves.Add(newMove);
+            legalMoves.Add(new Move(BoardIndex, target, MoveType.Capture));
+        }
+    }
+
+    private void TryAddEnPassant(Board board, List<Move> legalMoves, int forward)
+    {
+        Move lastMove = GameManager.Instance.LastMove;
+        if (lastMove == null) return;
+
+        ChessPiece movedPiece = board.GetPiece(lastMove.To);
+        if (movedPiece == null || movedPiece.PieceSO.type != PieceType.Pawn || movedPiece.Color == Color)
+        {
+            return;
         }
 
-        newMove = Color == TeamColor.White ? new(-1, 1) : new(-1, -1);
-        if (IsInsideBoard(BoardIndex + newMove) &&
-            board.GetPiece(BoardIndex + newMove) != null &&
-            board.GetPiece(BoardIndex + newMove).Color != this.Color)
-        {
-            validMoves.Add(newMove);
-        }
+        bool isTwoStepPawnMove = Mathf.Abs(lastMove.To.y - lastMove.From.y) == 2;
+        if (!isTwoStepPawnMove || lastMove.To.y != BoardIndex.y) return;
 
-        return validMoves;
+        if (Mathf.Abs(lastMove.To.x - BoardIndex.x) != 1) return;
+
+        Vector2Int destination = new Vector2Int(lastMove.To.x, BoardIndex.y + forward);
+        if (!IsInsideBoard(destination) || board.GetPiece(destination) != null) return;
+
+        Move enPassant = new Move(BoardIndex, destination, MoveType.EnPassant)
+        {
+            CapturedSquare = lastMove.To
+        };
+
+        legalMoves.Add(enPassant);
     }
 }
