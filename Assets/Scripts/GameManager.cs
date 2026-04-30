@@ -1,8 +1,4 @@
-using NUnit.Framework;
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -13,7 +9,7 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private Board board;
     public ChessPiece currentPiece;
-    public TeamColor curTurn;
+    public TeamColor curTurn = TeamColor.White;
     public List<Vector2Int> curValidMoves = new();
 
     private void Awake()
@@ -34,8 +30,6 @@ public class GameManager : MonoBehaviour
     public void SetCurrentPiece(ChessPiece newPiece)
     {
         currentPiece = newPiece;
-
-        // Take all valid moves of the piece
         curValidMoves = currentPiece.GetValidMoves(board);
     }
 
@@ -46,50 +40,29 @@ public class GameManager : MonoBehaviour
         Vector2 mouseScreen = Mouse.current.position.ReadValue();
         Vector2 mouseWorld = Camera.main.ScreenToWorldPoint(mouseScreen);
 
-        if (Mouse.current.leftButton.wasPressedThisFrame)
-        {
-            OnMouseClicked(mouseWorld);
-        }
-            
-
-        if (Mouse.current.leftButton.wasReleasedThisFrame)
-        {
-            OnMouseReleased(mouseWorld);
-        }
-            
-
+        if (Mouse.current.leftButton.wasPressedThisFrame) OnMouseClicked(mouseWorld);
+        if (Mouse.current.leftButton.wasReleasedThisFrame) OnMouseReleased(mouseWorld);
     }
 
     private void OnMouseClicked(Vector2 mouseWorld)
     {
         RaycastHit2D hit = Physics2D.Raycast(mouseWorld, Vector2.zero);
+        if (hit.collider == null) return;
 
-        // check if clicked object is a chess piece
-        if (hit.collider != null && hit.collider.gameObject.GetComponent<ChessPiece>() != null)
-        {
-            
-            ChessPiece collidedPiece = hit.collider.gameObject.GetComponent<ChessPiece>();
+        ChessPiece collidedPiece = hit.collider.gameObject.GetComponent<ChessPiece>();
+        if (collidedPiece == null || curTurn != collidedPiece.Color) return;
 
-            if (curTurn == collidedPiece.Color)
-            {
-                // Set collided piece to be the current piece
-                SetCurrentPiece(collidedPiece);
-
-                // Make piece follow mouse position
-                currentPiece.EnableFollowMouse();
-            }
-        }
+        SetCurrentPiece(collidedPiece);
+        currentPiece.EnableFollowMouse();
     }
 
     private void OnMouseReleased(Vector2 mouseWorld)
     {
         if (currentPiece == null) return;
 
-        // Disable follow mouse position component of chess piece
         currentPiece.GetComponent<FollowMouse>().enabled = false;
 
-        Vector2Int newPos = new (Mathf.RoundToInt(mouseWorld.x), Mathf.RoundToInt(mouseWorld.y));
-
+        Vector2Int newPos = new(Mathf.RoundToInt(mouseWorld.x), Mathf.RoundToInt(mouseWorld.y));
         Vector2Int move = newPos - currentPiece.BoardIndex;
 
         if (curValidMoves.Contains(move))
@@ -100,31 +73,27 @@ public class GameManager : MonoBehaviour
         {
             currentPiece.RecoverPosition();
         }
-    
-    
     }
 
     public void MovePiece(Vector2Int newPos)
     {
-        
-        if (!board.OnPieceMove(currentPiece.BoardIndex, newPos))
+        if (!board.TryMovePiece(currentPiece, newPos, out MoveModel move))
         {
             currentPiece.RecoverPosition();
             return;
         }
 
-        // Move piece in world
         currentPiece.MoveTo(newPos);
+        HandlePromotion(move);
 
-        // Switch turn
         curTurn = curTurn == TeamColor.White ? TeamColor.Black : TeamColor.White;
-
-        // Reset current piece
         currentPiece = null;
+        curValidMoves.Clear();
     }
 
-    private void HandleCastling()
+    private void HandlePromotion(MoveModel move)
     {
-        if (currentPiece.PieceSO.type != PieceType.King) return;
+        if (!move.IsPromotion || move.Piece is not Pawn pawn) return;
+        board.PromotePawn(pawn, PieceType.Queen);
     }
 }

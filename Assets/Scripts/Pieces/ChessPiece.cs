@@ -1,8 +1,5 @@
-﻿using NUnit.Framework;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(SpriteRenderer))]
 public class ChessPiece : MonoBehaviour
@@ -12,17 +9,14 @@ public class ChessPiece : MonoBehaviour
     public TeamColor Color;
     public Vector2Int BoardIndex;
 
-    [SerializeField] private GameManager gameManager;
-
     public ChessPiece InitailizePiece(PieceType type, TeamColor color)
     {
-        
-        this.PieceSO = Resources.Load<PieceSO>("PieceData/" + type.ToString());
+        PieceSO = Resources.Load<PieceSO>("PieceData/" + type);
         if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
+
         Color = color;
         spriteRenderer.sprite = color == TeamColor.White ? PieceSO.whiteSprite : PieceSO.blackSprite;
-
-        BoardIndex = new Vector2Int((int)this.transform.position.x, (int)this.transform.position.y);
+        BoardIndex = new Vector2Int((int)transform.position.x, (int)transform.position.y);
         return this;
     }
 
@@ -37,96 +31,57 @@ public class ChessPiece : MonoBehaviour
         transform.position = new Vector2(BoardIndex.x, BoardIndex.y);
     }
 
-    // Get all moves by pattern of piece
     public virtual List<Vector2Int> GetPatternMoves(Board board)
     {
         List<Vector2Int> patternMoves = new();
+
         foreach (var pattern in PieceSO.movePatterns)
         {
-            // Reverse pattern for black piece
-            Vector2Int tempPattern = pattern;
-            if (Color == TeamColor.Black)
-            {
-                tempPattern = new(pattern.x * -1, pattern.y * -1);
-            }
-
-            Vector2Int pos = BoardIndex + tempPattern;
+            Vector2Int step = Color == TeamColor.Black ? new Vector2Int(-pattern.x, -pattern.y) : pattern;
+            Vector2Int currentOffset = step;
+            Vector2Int pos = BoardIndex + step;
 
             while (IsInsideBoard(pos))
             {
-                if (!board.GetPiece(pos))
+                ChessPiece target = board.GetPiece(pos);
+                if (target == null)
                 {
-                    patternMoves.Add(tempPattern);
-                }
-
-                // There's an opponent piece on the way -> can move to this position but can't move further
-                if (board.GetPiece(pos) && board.GetPiece(pos).Color != this.Color)
-                {
-                    patternMoves.Add(tempPattern);
-                    break;
-                }
-
-                // There's an ally piece on the way
-                if (board.GetPiece(pos) && board.GetPiece(pos).Color == this.Color)
-                {
-                    break;
-                }
-
-                // This piece can't slide
-                if (!this.PieceSO.isSliding)
-                {
-                    break;
-                }
-
-                // Translate pos by tempPattern when piece can slide
-                if (Color == TeamColor.White)
-                {
-                    tempPattern += pattern;
-                    pos += pattern;
+                    patternMoves.Add(currentOffset);
                 }
                 else
                 {
-                    tempPattern -= pattern;
-                    pos -= pattern;
+                    if (target.Color != Color) patternMoves.Add(currentOffset);
+                    break;
                 }
 
+                if (!PieceSO.isSliding) break;
+
+                currentOffset += step;
+                pos += step;
             }
         }
 
         return patternMoves;
     }
 
-    public virtual List<Vector2Int> GetAttackMoves(Board board)
-    {
-        return GetPatternMoves(board);
-    }
+    public virtual List<Vector2Int> GetAttackMoves(Board board) => GetPatternMoves(board);
 
-    public virtual List<Vector2Int> GetSpecialMoves(Board board)
-    {
-        return new();
-    }
+    public virtual List<Vector2Int> GetSpecialMoves(Board board) => new();
 
     public virtual List<Vector2Int> GetValidMoves(Board board)
     {
-        List<Vector2Int> validMoves = GetPatternMoves(board);
+        var validMoves = GetPatternMoves(board);
         validMoves.AddRange(GetSpecialMoves(board));
 
-        foreach (var move in validMoves)
+        validMoves.RemoveAll(move =>
         {
             Vector2Int newPos = BoardIndex + move;
-            if (!IsInsideBoard(newPos))
-            {
-                Debug.LogError("Move " + move + " is outside board. Board index " + BoardIndex);
-                continue;
-            }
-            ChessPiece targetPiece = board.GetPiece(newPos);
+            if (!IsInsideBoard(newPos)) return true;
 
-            // If there's an ally piece on the way, this move is invalid
-            if (targetPiece && targetPiece.Color == this.Color)
-            {
-                validMoves.Remove(move);
-            }
-        }
+            var targetPiece = board.GetPiece(newPos);
+            return targetPiece != null && targetPiece.Color == Color;
+        });
+
         return validMoves;
     }
 
