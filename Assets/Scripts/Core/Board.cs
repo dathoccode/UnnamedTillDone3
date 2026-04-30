@@ -73,62 +73,71 @@ public class Board : MonoBehaviour
         };
     }
 
-    public bool TryMovePiece(ChessPiece movingPiece, Vector2Int to)
+    public bool TryMovePiece(ChessPiece movingPiece, Vector2Int to, out MoveModel move)
     {
-        Vector2Int from = movingPiece.BoardIndex;
+        move = BuildMoveModel(movingPiece, to);
         EnPassantInfo? prevEnPassant = CurrentEnPassant;
 
-        bool isEnPassantCapture = movingPiece is Pawn &&
-                                  CurrentEnPassant.HasValue &&
-                                  CurrentEnPassant.Value.CaptureSquare == to;
-
-        ChessPiece capturedPiece = GetPiece(to);
-        Vector2Int enPassantCapturedPos = default;
-
-        if (isEnPassantCapture)
+        if (move.IsEnPassant)
         {
-            enPassantCapturedPos = CurrentEnPassant.Value.PawnPosition;
-            capturedPiece = GetPiece(enPassantCapturedPos);
-            grid[enPassantCapturedPos.x, enPassantCapturedPos.y] = null;
+            grid[move.CapturedPosition.x, move.CapturedPosition.y] = null;
         }
 
-        grid[to.x, to.y] = movingPiece;
-        grid[from.x, from.y] = null;
+        grid[move.To.x, move.To.y] = movingPiece;
+        grid[move.From.x, move.From.y] = null;
 
         Vector2Int originalIndex = movingPiece.BoardIndex;
-        movingPiece.BoardIndex = to;
+        movingPiece.BoardIndex = move.To;
 
         if (IsKingChecked(movingPiece.Color))
         {
-            RollbackMove(movingPiece, from, to, capturedPiece, isEnPassantCapture, enPassantCapturedPos);
+            RollbackMove(movingPiece, move);
             CurrentEnPassant = prevEnPassant;
             return false;
         }
 
         movingPiece.BoardIndex = originalIndex;
 
-        if (capturedPiece != null)
+        if (move.CapturedPiece != null)
         {
-            Destroy(capturedPiece.gameObject);
+            Destroy(move.CapturedPiece.gameObject);
         }
 
-        UpdateEnPassantState(movingPiece, from, to);
+        move.IsPromotion = movingPiece is Pawn && (move.To.y == 0 || move.To.y == 7);
+        UpdateEnPassantState(movingPiece, move.From, move.To);
         return true;
     }
 
-    private void RollbackMove(ChessPiece movingPiece, Vector2Int from, Vector2Int to, ChessPiece capturedPiece, bool isEnPassantCapture, Vector2Int enPassantCapturedPos)
+    private MoveModel BuildMoveModel(ChessPiece movingPiece, Vector2Int to)
     {
-        movingPiece.BoardIndex = from;
-        grid[from.x, from.y] = movingPiece;
-        grid[to.x, to.y] = null;
+        Vector2Int from = movingPiece.BoardIndex;
+        bool isEnPassant = movingPiece is Pawn &&
+                           CurrentEnPassant.HasValue &&
+                           CurrentEnPassant.Value.CaptureSquare == to;
 
-        if (isEnPassantCapture)
+        Vector2Int capturedPos = isEnPassant ? CurrentEnPassant.Value.PawnPosition : to;
+
+        return new MoveModel
         {
-            grid[enPassantCapturedPos.x, enPassantCapturedPos.y] = capturedPiece;
-        }
-        else if (capturedPiece != null)
+            Piece = movingPiece,
+            From = from,
+            To = to,
+            IsEnPassant = isEnPassant,
+            CapturedPosition = capturedPos,
+            CapturedPiece = GetPiece(capturedPos),
+            IsPromotion = false
+        };
+    }
+
+    private void RollbackMove(ChessPiece movingPiece, MoveModel move)
+    {
+        movingPiece.BoardIndex = move.From;
+        grid[move.From.x, move.From.y] = movingPiece;
+        grid[move.To.x, move.To.y] = null;
+
+        if (move.CapturedPiece != null)
         {
-            grid[to.x, to.y] = capturedPiece;
+            grid[move.CapturedPosition.x, move.CapturedPosition.y] = move.CapturedPiece;
         }
     }
 

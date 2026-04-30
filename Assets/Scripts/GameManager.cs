@@ -77,27 +77,23 @@ public class GameManager : MonoBehaviour
 
     public void MovePiece(Vector2Int newPos)
     {
-        if (!board.TryMovePiece(currentPiece, newPos))
+        if (!board.TryMovePiece(currentPiece, newPos, out MoveModel move))
         {
             currentPiece.RecoverPosition();
             return;
         }
 
         currentPiece.MoveTo(newPos);
-        HandlePromotion(currentPiece);
+        HandlePromotion(move);
 
         curTurn = curTurn == TeamColor.White ? TeamColor.Black : TeamColor.White;
         currentPiece = null;
         curValidMoves.Clear();
     }
 
-    private void HandlePromotion(ChessPiece movedPiece)
+    private void HandlePromotion(MoveModel move)
     {
-        if (movedPiece is not Pawn) return;
-
-        int promotionRank = movedPiece.Color == TeamColor.White ? 7 : 0;
-        if (movedPiece.BoardIndex.y != promotionRank) return;
-
-        board.PromotePawn((Pawn)movedPiece, PieceType.Queen);
+        if (!move.IsPromotion || move.Piece is not Pawn pawn) return;
+        board.PromotePawn(pawn, PieceType.Queen);
     }
 }
