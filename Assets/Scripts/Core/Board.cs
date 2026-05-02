@@ -1,5 +1,3 @@
-using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -12,6 +10,7 @@ public class Board : MonoBehaviour
     [SerializeField] private GameObject piecePrefab;
     [SerializeField] private Tilemap tilemap;
     [SerializeField] private GameObject holder;
+    
 
     private bool[,] whiteAttackMap = new bool[8, 8], blackAttackMap = new bool[8,8];
 
@@ -86,17 +85,16 @@ public class Board : MonoBehaviour
         foreach (var piece in grid)
         {
             if (piece == null) continue;
-            var attackMoves = piece.GetAttackMoves(this);
+            var attackMoves = piece.GetAttackMoves();
             foreach (var move in attackMoves)
             {
-                Vector2Int pos = piece.BoardIndex + move;
                 if (piece.Color == TeamColor.White)
                 {
-                    whiteAttackMap[pos.x, pos.y] = true;
+                    whiteAttackMap[move.CapturedSquare.x, move.CapturedSquare.y] = true;
                 }
                 else
                 {
-                    blackAttackMap[pos.x, pos.y] = true;
+                    blackAttackMap[move.CapturedSquare.x, move.CapturedSquare.y] = true;
                 }
             }
         }
@@ -108,22 +106,25 @@ public class Board : MonoBehaviour
         if (byColor == TeamColor.White) return blackAttackMap[pos.x, pos.y];
         return whiteAttackMap[pos.x, pos.y];
     }
-    public bool OnPieceMove(Vector2Int from, Vector2Int to)
+    
+    public bool ApplyMove(Move move)
     {
-        // backu
-        ChessPiece backupPiece = GetPiece(to);
-        grid[to.x, to.y] = grid[from.x, from.y];
-        grid[from.x, from.y] = null;
+        ChessPiece movingPiece = GetPiece(move.From);
+        ChessPiece capturedPiece = GetPiece(move.CapturedSquare);
+
+        grid[move.CapturedSquare.x, move.CapturedSquare.y] = null;
+        grid[move.To.x, move.To.y] = movingPiece;
+        grid[move.From.x, move.From.y] = null;
 
         if (IsKingChecked())
         {
-            grid[from.x, from.y] = grid[to.x, to.y];
-            grid[to.x, to.y] = backupPiece;
+            grid[move.From.x, move.From.y] = movingPiece;
+            grid[move.CapturedSquare.x, move.CapturedSquare.y] = capturedPiece;
+            Debug.Log("Board: Cant move because king is checked");
             return false;
-        }
+        } 
 
-        if (backupPiece != null) Destroy(backupPiece.gameObject);
-
+        if (capturedPiece != null) Destroy(capturedPiece.gameObject);
 
         return true;
     }

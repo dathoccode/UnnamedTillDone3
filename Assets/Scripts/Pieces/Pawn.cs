@@ -5,79 +5,81 @@ public class Pawn : ChessPiece
 {
     public bool hasMoved;
 
-    // Depreciated
-    public override List<Vector2Int> GetPatternMoves(Board board)
+    public override List<Move> GetLegalMoves()
     {
-        List<Vector2Int> patternMoves = base.GetPatternMoves(board);
+        base.GetLegalMoves();
 
-        // Pawn can move to left and right forward position if there is an opponent piece
-        Vector2Int newMove = Color == TeamColor.White ? new(1, 1) : new(1, -1);
-        if (IsInsideBoard(BoardIndex + newMove) &&
-            board.GetPiece(BoardIndex + newMove) != null &&
-            board.GetPiece(BoardIndex + newMove).Color != this.Color)
+        // Capture move
+        Move captureMove = new(BoardIndex, Vector2Int.zero, MoveType.Capture);
+        captureMove.To = Color == TeamColor.White ? BoardIndex + new Vector2Int(1, 1) : BoardIndex + new Vector2Int(1, -1);
+        captureMove.CapturedSquare = captureMove.To;
+        if (IsInsideBoard(captureMove.To) &&
+            Board.Instance.GetPiece(captureMove.To) != null &&
+            Board.Instance.GetPiece(captureMove.To).Color != Color)
         {
-            patternMoves.Add(newMove);
+            LegalMoves.Add(captureMove);
         }
 
-        newMove = Color == TeamColor.White ? new(-1, 1) : new(-1, -1);
-        if (IsInsideBoard(BoardIndex + newMove) &&
-            board.GetPiece(BoardIndex + newMove) != null &&
-            board.GetPiece(BoardIndex + newMove).Color != this.Color)
+        captureMove = new(BoardIndex, Vector2Int.zero, MoveType.Capture);
+        captureMove.To = Color == TeamColor.White ? BoardIndex + new Vector2Int(-1, 1) : BoardIndex + new Vector2Int(-1, -1);
+        captureMove.CapturedSquare = captureMove.To;
+        if (IsInsideBoard(captureMove.To) &&
+            Board.Instance.GetPiece(captureMove.To) != null &&
+            Board.Instance.GetPiece(captureMove.To).Color != Color)
         {
-            patternMoves.Add(newMove);
+            LegalMoves.Add(captureMove);
         }
 
-        return patternMoves;
+        // Initialize move
+        Move firstMove = new(BoardIndex, Vector2Int.zero, MoveType.Normal);
+        firstMove.To = Color == TeamColor.White ? BoardIndex + new Vector2Int(0, 2) : BoardIndex + new Vector2Int(0, -2);
+        firstMove.CapturedSquare = firstMove.To;
+        Vector2Int midleSqr = (firstMove.To - BoardIndex) / 2;
+        
+        if (IsInsideBoard(firstMove.To) &&
+            hasMoved == false &&
+            Board.Instance.GetPiece(firstMove.To) == null &&
+            Board.Instance.GetPiece(BoardIndex + midleSqr) == null)
+        {
+            LegalMoves.Add(firstMove);
+        }
+
+        // En passant move
+        TryEnPassant();
+
+        return LegalMoves;
     }
 
-    public override List<Vector2Int> GetAttackMoves(Board board)
+    public override List<Move> GetAttackMoves()
     {
-        List<Vector2Int> specialMoves = base.GetAttackMoves(board);
-        if (Color == TeamColor.White)
+        List<Move> AttackMoves = new();
+        foreach (var move in LegalMoves)
         {
-            if (IsInsideBoard(BoardIndex + new Vector2Int(1, 1)))
-            {
-                specialMoves.Add(new Vector2Int(1, 1));
-            }
-            if (IsInsideBoard(BoardIndex + new Vector2Int(-1, 1)))
-            {
-                specialMoves.Add(new Vector2Int(-1, 1));
-            }
+            if (move.Type == MoveType.Capture) AttackMoves.Add(move);
         }
-        else
-        {
-            if (IsInsideBoard(BoardIndex + new Vector2Int(1, -1)))
-            {
-                specialMoves.Add(new Vector2Int(1, -1));
-            }
-            if (IsInsideBoard(BoardIndex + new Vector2Int(-1, -1)))
-            {
-                specialMoves.Add(new Vector2Int(-1, -1));
-            }
-        }
-
-        return specialMoves;
+        return AttackMoves;
     }
 
-
-    public override List<Vector2Int> GetSpecialMoves(Board board)
+    public override void ApplyMove(Move move)
     {
-        List<Vector2Int> specialMoves = base.GetSpecialMoves(board);
-
-        Vector2Int newMove = Color == TeamColor.White ? new(0, 2) : new(0, -2);
-
-        // Pawn can move 2 cell formard in the first move
-        if (!hasMoved && IsInsideBoard(BoardIndex + newMove))
-        {
-            specialMoves.Add(newMove);
-        }
-
-        return specialMoves;
-    }
-
-    public override void MoveTo(Vector2Int newPos)
-    {
-        base.MoveTo(newPos);
+        base.ApplyMove(move);
         hasMoved = true;
+    }
+
+    private void TryEnPassant()
+    {
+        Move lastMove = GameManager.Instance.GetLastMove();
+        if (lastMove == null) return;   
+        if (Board.Instance.GetPiece(lastMove.To) is not Pawn)  return;
+        if (Mathf.Abs(lastMove.Delta.y) != 2) return;
+        if (Mathf.Abs(lastMove.To.x - BoardIndex.x) != 1) return;
+        if(lastMove.To.y != BoardIndex.y) return;
+
+
+        Move enPassantMove = new(BoardIndex, Vector2Int.zero, MoveType.EnPassant);
+        enPassantMove.To = new Vector2Int(lastMove.To.x, BoardIndex.y + (Color == TeamColor.White ? 1 : -1));
+        enPassantMove.CapturedSquare = lastMove.To;
+        LegalMoves.Add(enPassantMove);
+        Debug.Log("En Passant move added: " + enPassantMove.CapturedSquare + ". Type: " + enPassantMove.Type);
     }
 }

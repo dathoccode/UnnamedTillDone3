@@ -1,8 +1,4 @@
-using NUnit.Framework;
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -11,10 +7,10 @@ public class GameManager : MonoBehaviour
     private static GameManager instance;
     public static GameManager Instance => instance;
 
-    [SerializeField] private Board board;
     public ChessPiece currentPiece;
     public TeamColor curTurn;
-    public List<Vector2Int> curValidMoves = new();
+    public List<Move> curLegalMoves = new();
+    private Stack<Move> MoveStack = new();
 
     private void Awake()
     {
@@ -23,7 +19,7 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        board.InitPieces();
+        Board.Instance.InitPieces();
     }
 
     private void Update()
@@ -33,10 +29,14 @@ public class GameManager : MonoBehaviour
 
     public void SetCurrentPiece(ChessPiece newPiece)
     {
+        if(currentPiece != null && currentPiece.Equals(newPiece)) return;
         currentPiece = newPiece;
-
-        // Take all valid moves of the piece
-        curValidMoves = currentPiece.GetValidMoves(board);
+        curLegalMoves = currentPiece.GetLegalMoves();
+    }
+    
+    public Move GetLastMove()
+    {
+        return MoveStack.Count > 0 ? MoveStack.Peek() : null;
     }
 
     private void ProcessMouseInput()
@@ -56,75 +56,56 @@ public class GameManager : MonoBehaviour
         {
             OnMouseReleased(mouseWorld);
         }
-            
-
     }
 
     private void OnMouseClicked(Vector2 mouseWorld)
     {
         RaycastHit2D hit = Physics2D.Raycast(mouseWorld, Vector2.zero);
 
-        // check if clicked object is a chess piece
-        if (hit.collider != null && hit.collider.gameObject.GetComponent<ChessPiece>() != null)
-        {
-            
-            ChessPiece collidedPiece = hit.collider.gameObject.GetComponent<ChessPiece>();
+        if (hit.collider == null) return;
 
-            if (curTurn == collidedPiece.Color)
-            {
-                // Set collided piece to be the current piece
-                SetCurrentPiece(collidedPiece);
+        if (hit.collider.gameObject.GetComponent<ChessPiece>() == null) return;
 
-                // Make piece follow mouse position
-                currentPiece.EnableFollowMouse();
-            }
-        }
+        ChessPiece collidedPiece = hit.collider.gameObject.GetComponent<ChessPiece>();
+
+        if (curTurn != collidedPiece.Color) return;
+        
+        SetCurrentPiece(collidedPiece);
+        currentPiece.EnableFollowMouse();
     }
 
     private void OnMouseReleased(Vector2 mouseWorld)
     {
         if (currentPiece == null) return;
 
-        // Disable follow mouse position component of chess piece
         currentPiece.GetComponent<FollowMouse>().enabled = false;
 
         Vector2Int newPos = new (Mathf.RoundToInt(mouseWorld.x), Mathf.RoundToInt(mouseWorld.y));
 
-        Vector2Int move = newPos - currentPiece.BoardIndex;
+        Move move = curLegalMoves.Find(m => m.To == newPos && m.From == currentPiece.BoardIndex);
 
-        if (curValidMoves.Contains(move))
+        if (move != null)
         {
-            MovePiece(newPos);
+            MovePiece(move);
         }
         else
         {
             currentPiece.RecoverPosition();
         }
-    
-    
     }
 
-    public void MovePiece(Vector2Int newPos)
+    public void MovePiece(Move move)
     {
         
-        if (!board.OnPieceMove(currentPiece.BoardIndex, newPos))
+        if (!Board.Instance.ApplyMove(move))
         {
             currentPiece.RecoverPosition();
             return;
         }
 
-        // Move piece in world
-        currentPiece.MoveTo(newPos);
-
-        // Switch turn
+        currentPiece.ApplyMove(move);
+        MoveStack.Push(move);
         curTurn = curTurn == TeamColor.White ? TeamColor.Black : TeamColor.White;
-
-        // Reset current piece
         currentPiece = null;
-    }
-
-    private void HandleCastling()
-    {
-        if (currentPiece.PieceSO.type != PieceType.King) return;
     }
 }
