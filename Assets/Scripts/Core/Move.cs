@@ -16,6 +16,12 @@ public class Move
     public Vector2Int To;
     public MoveType Type;
     public Vector2Int CapturedSquare;
+
+    public Move()
+    {
+
+    }
+
     public Move(Vector2Int from, Vector2Int to, MoveType type = MoveType.Normal)
     {
         From = from;

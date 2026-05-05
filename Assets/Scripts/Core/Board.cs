@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -10,7 +12,6 @@ public class Board : MonoBehaviour
     [SerializeField] private GameObject piecePrefab;
     [SerializeField] private Tilemap tilemap;
     [SerializeField] private GameObject holder;
-    
 
     private bool[,] whiteAttackMap = new bool[8, 8], blackAttackMap = new bool[8,8];
 
@@ -74,8 +75,8 @@ public class Board : MonoBehaviour
 
     private void ClearAttackMap()
     {
-        whiteAttackMap = new bool[8, 8];
-        blackAttackMap = new bool[8, 8];
+        Array.Clear(whiteAttackMap, 0, whiteAttackMap.Length);
+        Array.Clear(blackAttackMap, 0, blackAttackMap.Length);
     }
 
     private void BuildAttackMap()
@@ -85,7 +86,7 @@ public class Board : MonoBehaviour
         foreach (var piece in grid)
         {
             if (piece == null) continue;
-            var attackMoves = piece.GetAttackMoves();
+            List<Move> attackMoves = piece.GetAttackMoves();
             foreach (var move in attackMoves)
             {
                 if (piece.Color == TeamColor.White)
@@ -102,7 +103,6 @@ public class Board : MonoBehaviour
 
     public bool IsSquareAttacked(Vector2Int pos, TeamColor byColor)
     {
-        BuildAttackMap();
         if (byColor == TeamColor.White) return blackAttackMap[pos.x, pos.y];
         return whiteAttackMap[pos.x, pos.y];
     }
@@ -112,17 +112,23 @@ public class Board : MonoBehaviour
         ChessPiece movingPiece = GetPiece(move.From);
         ChessPiece capturedPiece = GetPiece(move.CapturedSquare);
 
+        movingPiece.BoardIndex = move.To;
         grid[move.CapturedSquare.x, move.CapturedSquare.y] = null;
         grid[move.To.x, move.To.y] = movingPiece;
         grid[move.From.x, move.From.y] = null;
+        BuildAttackMap();
 
         if (IsKingChecked())
         {
             grid[move.From.x, move.From.y] = movingPiece;
             grid[move.CapturedSquare.x, move.CapturedSquare.y] = capturedPiece;
+            movingPiece.BoardIndex = move.From;
+            BuildAttackMap();
             Debug.Log("Board: Cant move because king is checked");
             return false;
-        } 
+        }
+
+        movingPiece.ApplyMove(move);
 
         if (capturedPiece != null) Destroy(capturedPiece.gameObject);
 
@@ -144,6 +150,36 @@ public class Board : MonoBehaviour
     private bool IsKingChecked()
     {
         Vector2Int kingPos = GetKingPosition(GameManager.Instance.curTurn);
+
         return IsSquareAttacked(kingPos, GameManager.Instance.curTurn);
+    }
+
+    public void PromotePawn(Move move, PieceType type)
+    {
+        Pawn promotedPawn = GetPiece(move.To) as Pawn;
+        if (promotedPawn == null || type == PieceType.Pawn || type == PieceType.King) return;
+
+        Vector2Int pawnPosition = promotedPawn.BoardIndex;
+
+        grid[pawnPosition.x, pawnPosition.y] = null;
+        Destroy(promotedPawn.gameObject);
+
+        SpawnPiece(type, pawnPosition, promotedPawn.Color);    
+    }
+
+    private void ShowMatrix(bool[,] attackMap)
+    {
+        string output = "";
+
+        for (int i = 7; i >= 0; i--)
+        {
+            for (int j = 0; j < 8; j++)
+            {
+                output += (attackMap[j, i] ? "2 " : "0 ");
+            }
+            output += "\n";
+        }
+
+        Debug.Log(output);
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 public class Pawn : ChessPiece
@@ -7,7 +8,18 @@ public class Pawn : ChessPiece
 
     public override List<Move> GetLegalMoves()
     {
-        base.GetLegalMoves();
+        Move patternMove = new(BoardIndex, Vector2Int.zero, MoveType.Normal);
+        patternMove.To = Color == TeamColor.White ? BoardIndex + new Vector2Int(0, 1) : BoardIndex + new Vector2Int(0, -1);
+        if (IsInsideBoard(patternMove.To) && Board.Instance.GetPiece(patternMove.To) == null)
+        {
+            if (Color == TeamColor.White && patternMove.To.y == 7 ||
+                Color == TeamColor.Black && patternMove.To.y == 0)
+            {
+                patternMove.Type = MoveType.Promotion;
+            }
+            patternMove.CapturedSquare = patternMove.To;
+            LegalMoves.Add(patternMove);
+        }
 
         // Capture move
         Move captureMove = new(BoardIndex, Vector2Int.zero, MoveType.Capture);
@@ -53,10 +65,17 @@ public class Pawn : ChessPiece
     public override List<Move> GetAttackMoves()
     {
         List<Move> AttackMoves = new();
-        foreach (var move in LegalMoves)
-        {
-            if (move.Type == MoveType.Capture) AttackMoves.Add(move);
-        }
+
+        Move captureMove = new(BoardIndex, Vector2Int.zero, MoveType.Capture);
+        captureMove.To = Color == TeamColor.White ? BoardIndex + new Vector2Int(1, 1) : BoardIndex + new Vector2Int(1, -1);
+        captureMove.CapturedSquare = captureMove.To;
+        if (IsInsideBoard(captureMove.To)) AttackMoves.Add(captureMove);
+
+        captureMove = new(BoardIndex, Vector2Int.zero, MoveType.Capture);
+        captureMove.To = Color == TeamColor.White ? BoardIndex + new Vector2Int(-1, 1) : BoardIndex + new Vector2Int(-1, -1);
+        captureMove.CapturedSquare = captureMove.To;
+        if (IsInsideBoard(captureMove.To)) AttackMoves.Add(captureMove);
+
         return AttackMoves;
     }
 
@@ -69,8 +88,8 @@ public class Pawn : ChessPiece
     private void TryEnPassant()
     {
         Move lastMove = GameManager.Instance.GetLastMove();
-        if (lastMove == null) return;   
-        if (Board.Instance.GetPiece(lastMove.To) is not Pawn)  return;
+        if (lastMove == null) return;
+        if (Board.Instance.GetPiece(lastMove.To) is not Pawn) return;
         if (Mathf.Abs(lastMove.Delta.y) != 2) return;
         if (Mathf.Abs(lastMove.To.x - BoardIndex.x) != 1) return;
         if(lastMove.To.y != BoardIndex.y) return;
@@ -80,6 +99,5 @@ public class Pawn : ChessPiece
         enPassantMove.To = new Vector2Int(lastMove.To.x, BoardIndex.y + (Color == TeamColor.White ? 1 : -1));
         enPassantMove.CapturedSquare = lastMove.To;
         LegalMoves.Add(enPassantMove);
-        Debug.Log("En Passant move added: " + enPassantMove.CapturedSquare + ". Type: " + enPassantMove.Type);
     }
 }

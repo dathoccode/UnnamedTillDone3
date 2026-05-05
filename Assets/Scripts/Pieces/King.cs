@@ -62,23 +62,8 @@ public class King : ChessPiece
         return true;
     }
 
-
     public override void ApplyMove(Move move)
     {
-        if (move.Type == MoveType.Castling)
-        {
-            if (move.To.x == 6)
-            {
-                Rook rook = Board.Instance.GetPiece(7, BoardIndex.y) as Rook;
-                rook.ApplyMove(new Move(rook.BoardIndex, new Vector2Int(5, BoardIndex.y), MoveType.Castling));
-            }
-            else if (move.To.x == 2)
-            {
-                Rook rook = Board.Instance.GetPiece(0, BoardIndex.y) as Rook;
-                rook.ApplyMove(new Move(rook.BoardIndex, new Vector2Int(3, BoardIndex.y), MoveType.Castling));
-            }
-
-        }
         hasMoved = true;
         base.ApplyMove(move);
     }

@@ -11,6 +11,7 @@ public class GameManager : MonoBehaviour
     public TeamColor curTurn;
     public List<Move> curLegalMoves = new();
     private Stack<Move> MoveStack = new();
+    private GameState curState = GameState.Active;
 
     private void Awake()
     {
@@ -24,6 +25,7 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
+        if (curState != GameState.Active) return;
         ProcessMouseInput();
     }
 
@@ -65,6 +67,7 @@ public class GameManager : MonoBehaviour
         if (hit.collider == null) return;
 
         if (hit.collider.gameObject.GetComponent<ChessPiece>() == null) return;
+        hit.collider.gameObject.GetComponent<SpriteRenderer>().sortingOrder = 5;
 
         ChessPiece collidedPiece = hit.collider.gameObject.GetComponent<ChessPiece>();
 
@@ -79,6 +82,7 @@ public class GameManager : MonoBehaviour
         if (currentPiece == null) return;
 
         currentPiece.GetComponent<FollowMouse>().enabled = false;
+        currentPiece.GetComponent<SpriteRenderer>().sortingOrder = 1;
 
         Vector2Int newPos = new (Mathf.RoundToInt(mouseWorld.x), Mathf.RoundToInt(mouseWorld.y));
 
@@ -96,16 +100,48 @@ public class GameManager : MonoBehaviour
 
     public void MovePiece(Move move)
     {
-        
         if (!Board.Instance.ApplyMove(move))
         {
             currentPiece.RecoverPosition();
             return;
         }
 
-        currentPiece.ApplyMove(move);
+        if (move.Type == MoveType.Castling)
+        {
+            Move rookMove = new();
+            if (move.To.x == 6)
+            {
+                rookMove = new(new Vector2Int(7, move.To.y), new Vector2Int(5, move.To.y), MoveType.Castling);
+            }
+            else if (move.To.x == 2)
+            {
+                rookMove = new(new Vector2Int(0, move.To.y), new Vector2Int(3, move.To.y), MoveType.Castling);
+            }
+            ChessPiece rook = Board.Instance.GetPiece(rookMove.From); 
+            if (rook != null)
+            {
+                Board.Instance.ApplyMove(rookMove);
+            }
+        }
+        
+        // Promotion
+        if (currentPiece.PieceSO.type == PieceType.Pawn && move.To.y == (currentPiece.Color == TeamColor.White ? 7 : 0))
+        {
+            curState = GameState.Paused;
+            UIManager.Instance.ShowPromotionUI(currentPiece.Color);
+        }
+        
         MoveStack.Push(move);
         curTurn = curTurn == TeamColor.White ? TeamColor.Black : TeamColor.White;
         currentPiece = null;
+    }
+
+    public void PromotePawn(PieceType newType)
+    {
+        Move lastMove = GetLastMove();
+        if (lastMove == null) return;
+        Board.Instance.PromotePawn(lastMove, newType);
+        UIManager.Instance.HidePromotionUI();
+        curState = GameState.Active;
     }
 }

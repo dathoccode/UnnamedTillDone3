@@ -68,9 +68,13 @@ public class ChessPiece : MonoBehaviour
     public virtual List<Move> GetAttackMoves()
     {
         List<Move> AttackMoves = new();
-        foreach (var move in LegalMoves)
+        var temp = GetLegalMoves();
+        foreach (var move in temp)
         {
-            if (move.Type == MoveType.Capture || move.Type == MoveType.Normal) AttackMoves.Add(move);
+            if (move.Type == MoveType.Capture || move.Type == MoveType.Normal)
+            {
+                AttackMoves.Add(move);
+            }
 
         }
         return AttackMoves;
